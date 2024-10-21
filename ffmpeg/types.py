@@ -14,10 +14,10 @@ from typing import TypeVar, NewType, Union
 # Local Imports
 
 
-Input = NewType('Input', Union[str, int])
+Input = NewType("Input", Union[str, int])
 Output = str
-Dimension = TypeVar('Dimension', str, int, float)
-Position = NewType('Position', Union[str, int, float])
-Seconds = TypeVar('Seconds', str, int, float)
-Volume = TypeVar('Volume', str, int)
-Size = TypeVar('Size', str, int, float)
+Dimension = TypeVar("Dimension", str, int, float)
+Position = NewType("Position", Union[str, int, float])
+Seconds = TypeVar("Seconds", str, int, float)
+Volume = TypeVar("Volume", str, int)
+Size = TypeVar("Size", str, int, float)

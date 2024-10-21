@@ -19,7 +19,9 @@ INPUT_DIR = LOCAL_DIR.joinpath("test_input") if DEBUG else LOCAL_DIR.joinpath("i
 
 PROBE = PROBE()
 
-FFMPEG_COMPILING_SPEED = 1.5  # Average speed FFMPEG compiles the videos with current settings
+FFMPEG_COMPILING_SPEED = (
+    1.5  # Average speed FFMPEG compiles the videos with current settings
+)
 
 
 def datetime_from_file_name(file: pathlib.Path) -> datetime.datetime:
@@ -75,7 +77,10 @@ class Video:
         self.ffmpeg_video_stream = f"{self.ffmpeg.current_input_index}:v"
         self.ffmpeg_audio_stream = f"{self.ffmpeg.current_input_index}:a"
 
-        if self.type_ == VideoTypes.Parked and self.view_point == VideoViewPointType.Front:
+        if (
+            self.type_ == VideoTypes.Parked
+            and self.view_point == VideoViewPointType.Front
+        ):
             self.add_audio_stream()
 
     def add_audio_stream(self):
@@ -85,7 +90,9 @@ class Video:
         :return:
         """
         self.ffmpeg_audio_stream = f"a_{self.ffmpeg_input_number}"
-        self.ffmpeg.create_silent_audio_stream(self.ffmpeg_audio_stream, self.duration_seconds)
+        self.ffmpeg.create_silent_audio_stream(
+            self.ffmpeg_audio_stream, self.duration_seconds
+        )
 
 
 @dataclass
@@ -99,8 +106,11 @@ class VideoGroup:
     final_video: Optional[pathlib.Path]
 
     def __init__(
-            self, start_time: datetime.datetime, end_time: datetime.datetime,
-            videos: List[pathlib.Path], ffmpeg: Optional[FFMPEG] = None
+        self,
+        start_time: datetime.datetime,
+        end_time: datetime.datetime,
+        videos: List[pathlib.Path],
+        ffmpeg: Optional[FFMPEG] = None,
     ):
         self.start_time = start_time
         self.end_time = end_time
@@ -168,7 +178,10 @@ class VideoGroup:
             return
 
         front_and_back_videos = list(zip(self.front_videos, self.back_videos))
-        batches: List[Tuple[Video, Video]] = [front_and_back_videos[i:i + 4] for i in range(0, len(front_and_back_videos), 4)]
+        batches: List[Tuple[Video, Video]] = [
+            front_and_back_videos[i : i + 4]
+            for i in range(0, len(front_and_back_videos), 4)
+        ]
 
         batch_files = []
         for index, batch in enumerate(batches):
@@ -182,27 +195,29 @@ class VideoGroup:
                 back_video.add_as_ffmpeg_input()
 
             self.ffmpeg.concat(
-                input=[(video.ffmpeg_video_stream, video.ffmpeg_audio_stream) for (video, _) in batch],
+                input=[
+                    (video.ffmpeg_video_stream, video.ffmpeg_audio_stream)
+                    for (video, _) in batch
+                ],
                 output_video="front_v",
-                output_audio="front_a"
+                output_audio="front_a",
             ).concat(
-                input=[(video.ffmpeg_video_stream, video.ffmpeg_audio_stream) for (_, video) in batch],
-                output_video="back_v"
+                input=[
+                    (video.ffmpeg_video_stream, video.ffmpeg_audio_stream)
+                    for (_, video) in batch
+                ],
+                output_video="back_v",
             ).scale(
-                input="back_v",
-                width=1920 / 1.5,
-                height=1080 / 1.5,
-                output="back_v"
+                input="back_v", width=1920 / 1.5, height=1080 / 1.5, output="back_v"
             ).overlay(
-                background="front_v",
-                overlay="back_v",
-                x=0, y=0,
-                output="v"
+                background="front_v", overlay="back_v", x=0, y=0, output="v"
             ).map(
                 "v"
             ).map(
                 "front_a"
-            ).add_output(output_file.as_posix())
+            ).add_output(
+                output_file.as_posix()
+            )
 
             if DEBUG:
                 print(self.ffmpeg)
@@ -214,7 +229,23 @@ class VideoGroup:
         for batch_file in batch_files:
             cmd.extend(["-i", batch_file])
 
-        cmd.extend(["-filter_complex", f"concat=n={len(batch_files)}:v=1:a=1", "-c:v", "h264_nvenc", "-preset", "slow", "-qp", "20", "-c:a", "aac", "-b:a", "44100", final_output_file])
+        cmd.extend(
+            [
+                "-filter_complex",
+                f"concat=n={len(batch_files)}:v=1:a=1",
+                "-c:v",
+                "h264_nvenc",
+                "-preset",
+                "slow",
+                "-qp",
+                "20",
+                "-c:a",
+                "aac",
+                "-b:a",
+                "44100",
+                final_output_file,
+            ]
+        )
         process = subprocess.Popen(cmd, stdout=sys.stdout, stderr=sys.stderr)
         process.wait()
 
@@ -226,16 +257,21 @@ def display_table(videos: List[VideoGroup]):
     table = Table()
 
     # Add columns
-    columns = ["Start Time", "End Time", "Total Videos", "Total Front Videos", "Total Back Videos", "Total Minutes",
-               "Has Missing Videos", "Compiling Time", "Final Video"]
+    columns = [
+        "Start Time",
+        "End Time",
+        "Total Videos",
+        "Total Front Videos",
+        "Total Back Videos",
+        "Total Minutes",
+        "Has Missing Videos",
+        "Compiling Time",
+        "Final Video",
+    ]
     for column in columns:
         table.add_column(column)
 
-    totals = {
-        "front_videos": 0,
-        "back_videos": 0,
-        "minutes": 0
-    }
+    totals = {"front_videos": 0, "back_videos": 0, "minutes": 0}
     for video in videos:
         front_videos = len(video.front_videos)
         back_videos = len(video.back_videos)
@@ -248,23 +284,30 @@ def display_table(videos: List[VideoGroup]):
 
         # Add row
         table.add_row(
-            str(video.start_time), str(video.end_time),
+            str(video.start_time),
+            str(video.end_time),
             str(front_videos + back_videos),
-            str(front_videos), str(back_videos),
+            str(front_videos),
+            str(back_videos),
             str(minutes),
             str(video.has_missing_pair),
             str(datetime.timedelta(minutes=len(video.front_videos))),
-            str(video.final_video)
+            str(video.final_video),
         )
 
     # Add total row
     table.add_section()
     table.add_row(
-        "", "Totals",
+        "",
+        "Totals",
         str(totals["front_videos"] + totals["back_videos"]),
-        str(totals["front_videos"]), str(totals["back_videos"]),
+        str(totals["front_videos"]),
+        str(totals["back_videos"]),
         str(totals["minutes"]),
-        "Total Compiling Time", str(datetime.timedelta(minutes=totals["front_videos"] / FFMPEG_COMPILING_SPEED)),
+        "Total Compiling Time",
+        str(
+            datetime.timedelta(minutes=totals["front_videos"] / FFMPEG_COMPILING_SPEED)
+        ),
     )
 
     console = Console()
@@ -288,16 +331,16 @@ def get_videos() -> List[VideoGroup]:
                 break
 
         if not found_group:
-            videos.append(VideoGroup(
-                start_time=file_datetime,
-                end_time=file_datetime,
-                videos=[file]
-            ))
+            videos.append(
+                VideoGroup(
+                    start_time=file_datetime, end_time=file_datetime, videos=[file]
+                )
+            )
 
     return videos
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     vs = get_videos()
     # vs.sort(key=lambda x: x.total_real_minutes)
     display_table(vs)
