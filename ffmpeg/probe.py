@@ -17,10 +17,10 @@ import subprocess
 
 class PROBE:
     """
-        Interact with FFMPEG PROBE using python.
+    Interact with FFMPEG PROBE using python.
     """
 
-    def __init__(self, ffprobe_path: str = 'ffprobe'):
+    def __init__(self, ffprobe_path: str = "ffprobe"):
         self.probe_path = ffprobe_path
 
         self._debug = False
@@ -30,31 +30,31 @@ class PROBE:
 
     def _set_defaults(self) -> None:
         """
-            Set default values.
+        Set default values.
         """
 
         self.cmd = [self.probe_path]
 
     def _run(self) -> str:
         """
-            Run the command built with the class and return the output.
+        Run the command built with the class and return the output.
         """
 
         process = subprocess.Popen(self.cmd, stdout=subprocess.PIPE)
         process.wait()
 
         if process.returncode != 0:
-            raise Exception(f'probe exited with code {process.returncode}')
+            raise Exception(f"probe exited with code {process.returncode}")
 
-        output = process.stdout.read().decode('utf-8')
+        output = process.stdout.read().decode("utf-8")
         process.stdout.close()
 
         return output
 
     def reset(self) -> PROBE:
         """
-            Reset the class to default values.
-            Useful when you want to run different commands under the same instance.
+        Reset the class to default values.
+        Useful when you want to run different commands under the same instance.
         """
 
         self._set_defaults()
@@ -63,17 +63,18 @@ class PROBE:
 
     def get_media_duration(self, input_file: str) -> int:
         """
-            Get the media duration of the input file.
+        Get the media duration of the input file.
         """
 
         self.cmd.extend(
             [
-                '-v', 'error',
-                '-show_entries',
-                'format=duration',
-                '-of',
-                'default=noprint_wrappers=1:nokey=1',
-                input_file
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                input_file,
             ]
         )
 
